@@ -14,12 +14,14 @@ import {
 } from '$lib/middleware/rules';
 import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
+import { ServiceHelper } from '@/server/helper';
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
 const initializeLocals: Handle = async ({ event, resolve }) => {
   event.locals.db = db;
+  event.locals.helper = new ServiceHelper(event);
   event.locals.auth = auth;
   return resolve(event);
 };

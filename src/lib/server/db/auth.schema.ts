@@ -13,7 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 
-export const userRoleEnum = pgEnum('user_role', ['user', 'moderator', 'superadmin']);
+export const userRoleEnum = pgEnum('user_role', ['user', 'admin']);
 export const userStatusEnum = pgEnum('user_status', ['active', 'inactive', 'banned']);
 
 
