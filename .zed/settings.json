@@ -1,0 +1,23 @@
+{
+  "prettier": {
+    "allowed": false,
+  },
+  "language_servers": [
+    "!prettier",
+    "..."
+  ],
+  "lsp": {
+    "eslint": {
+      "settings": {
+        "configFile": ".nuxt/eslint.config.mjs"
+      },
+    },
+    "prisma-language-server": {
+      "settings": {
+        "prisma": {
+          "pinToPrisma6": true
+        }
+      }
+    }
+  },
+}
