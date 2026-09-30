@@ -14,12 +14,40 @@ import {
 } from '$lib/middleware/rules';
 import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
+import { RESERVED_SLUGS, SLUG_PATTERN } from '$lib/utils/slug';
 import { ServiceHelper } from '@/server/helper';
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
+/**
+ * Returns true when the pathname looks like a campaign slug (e.g. /aBc12dE or /my-promo)
+ * and should be dispatched directly to the redirect engine, bypassing session lookup.
+ *
+ * A slug path is a single segment: no sub-paths (/a/b), no known route prefixes.
+ */
+function isSlugPath(pathname: string): boolean {
+  // Must be exactly one segment: /something
+  const segment = pathname.startsWith('/') ? pathname.slice(1).replace(/\/$/, '') : '';
+  if (!segment || segment.includes('/')) return false;
+  if (!SLUG_PATTERN.test(segment)) return false;
+  if (RESERVED_SLUGS.has(segment.toLowerCase())) return false;
+  // Known app route prefixes that should never be treated as slugs
+  const knownPrefixes = [
+    'api', 'app', '_app', 'about', 'blog', 'contact', 'docs', 'faq',
+    'signin', 'signup', 'signout', 'otp-verification', 'forgot-password',
+    'reset-password', '2fa', 'privacy', 'terms', 'static',
+  ];
+  return !knownPrefixes.includes(segment.toLowerCase());
+}
+
 const initializeLocals: Handle = async ({ event, resolve }) => {
+  // Fast-path: campaign redirect slugs skip full initialisation.
+  // The route handler (src/routes/[slug=slug]/+server.ts) reads env/redis directly.
+  if (isSlugPath(event.url.pathname)) {
+    return resolve(event);
+  }
+
   event.locals.db = db;
   event.locals.helper = new ServiceHelper(event);
   event.locals.auth = auth;
@@ -34,6 +62,12 @@ const handleAuthAndRoutes: Handle = async ({ event, resolve }) => {
 
   if (matchesRoutePrefix(pathname, '/api/auth')) {
     return auth.handler(request);
+  }
+
+  // Campaign slug fast-path — skip session lookup and route guards entirely.
+  // The +server.ts handler already handles all redirect logic.
+  if (isSlugPath(pathname)) {
+    return resolve(event);
   }
 
   try {

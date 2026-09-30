@@ -109,7 +109,7 @@ Semua hasil keputusan (allowed / blocked-geo / blocked-ip / bot / dll.) dicatat 
 - **Geo country**: header Vercel `x-vercel-ip-country`. Mode `allowlist` atau `denylist`. Reuse `src/lib/utils/country.ts`.
 - **IP**: IPv4/IPv6 tunggal + CIDR. `event.getClientAddress()`. Global blocklist (admin) + per campaign. Perluas `src/lib/utils/ipv4-address.ts` untuk IPv6/CIDR.
 - **Device type**: `mobile | tablet | desktop | tv | unknown`.
-- **Browser type**: `chrome | safari | firefox | edge | samsung | opera | facebook-in-app | instagram-in-app | other`.
+- **Browser type**: `chrome | safari | firefox | edge | samsung | opera | facebook_in_app | instagram_in_app | other`.
   - Deteksi in-app browser Facebook (`FBAN`/`FBAV` di UA) sebagai kategori sendiri — berguna karena mayoritas klik dari FB berasal dari in-app browser.
 - Parsing UA dengan `ua-parser-js` (dependency baru), ditambah User-Agent Client Hints jika tersedia.
 - Aksi saat diblokir: halaman netral 403 atau 404 (dipilih per campaign). Tidak ada fallback URL.
@@ -199,29 +199,34 @@ UI: dark/light mode via `mode-watcher` (sudah terpasang), toast & alert dialog y
 Ukuran: **S** kecil · **M** sedang · **L** besar.
 
 ### Fase 0 — Stabilisasi fondasi (S)
-- [ ] Selaraskan riwayat migrasi Drizzle dengan database Neon (baseline `0000`, lalu terapkan `0001` default `account.issuer`). Verifikasi login Google berhasil.
-- [ ] Perbaiki mismatch role di `src/lib/components/app/sidebar.svelte`: memakai `superadmin`/`moderator`, sedangkan schema hanya `user`/`admin` → menu Users & Settings saat ini tidak pernah tampil. Gunakan helper dari `src/lib/middleware/rules.ts`.
-- [ ] Putuskan sumber kebenaran status user: `user.status` vs `user.banned` (Better Auth) — sinkronkan atau pilih satu.
-- [ ] Validasi env dengan Zod saat startup (`DATABASE_URL`, `BETTER_AUTH_*`, `UPSTASH_*`, `IP_HASH_SECRET`, dll.) + lengkapi `.env.example`.
-- [ ] Setup CI minimal: `pnpm check`, `pnpm lint`, `vitest --run`.
+- [x] Selaraskan riwayat migrasi Drizzle dengan database Neon (baseline `0000` via `scripts/db-baseline.mjs`, lalu `0001` default `account.issuer`).
+- [x] Perbaiki mismatch role di `src/lib/components/app/sidebar.svelte` (pakai `isAdmin()` dari `src/lib/middleware/rules.ts`).
+- [x] Pisahkan vitest menjadi project `server` (node) dan `client` (browser) di `vite.config.ts`.
+- [ ] Status user: keputusan → `user.banned` adalah flag enforcement Better Auth, `user.status` mengikutinya (`setUserBan` di `src/lib/server/user.ts` sudah sinkron). Enforcement `inactive` saat login dikerjakan di **Fase 5**.
+- [ ] Validasi env dengan Zod → dipindah ke **Fase 2** (bersamaan dengan env baru `IP_HASH_SECRET`). Variabel `$env/static/private` sudah wajib ada saat build.
+- [ ] Setup CI minimal (`pnpm check`, unit test project `server`) → butuh `.env.example` yang lengkap agar `svelte-kit sync` bisa generate tipe `$env` di CI.
+
+> Untuk database lain (mis. production) yang tabelnya sudah ada tetapi riwayat migrasinya kosong: `node scripts/db-baseline.mjs --to 0000_open_speed --apply`, lalu `pnpm db:migrate`.
 
 ### Fase 1 — Schema & core domain (M)
-- [ ] Tabel campaign, destination, rule, tag, click_event (+ relations) → generate & apply migrasi.
-- [ ] Zod schema bersama (`src/lib/schemas/campaign.ts`) dipakai form dan server.
-- [ ] Service layer `src/lib/server/campaign/*`: CRUD, ownership check, cache invalidation.
-- [ ] Util slug: random (`src/lib/utils/slug.ts`), custom, reserved list, cek unik.
+- [x] Tabel campaign, destination, rule, tag, click_event (+ relations) → migrasi `drizzle/0002_campaigns.sql` (sudah diterapkan).
+- [x] Zod schema bersama `src/lib/schemas/campaign.ts` (form create/edit + filter list) + unit test.
+- [x] Service layer `src/lib/server/campaign/service.ts` (list/get/create/update/setStatus/remove/duplicate, ownership, soft delete) + `cache.ts` (invalidasi `link:{slug}`). Tersedia via `locals.helper.campaigns`.
+- [x] Util slug: reserved list diperbarui dengan route aplikasi yang sebenarnya + unit test.
+- [x] Integration test opt-in: `RUN_DB_TESTS=1 pnpm exec vitest --run --project server service.integration`.
 
-### Fase 2 — Redirect engine (L) ← inti produk
-- [ ] Param matcher + route `[slug=slug]`, `trailingSlash: 'ignore'`, fast-path di hooks.
-- [ ] Resolver config (Redis → DB).
-- [ ] Query forwarding + merge rules.
-- [ ] Rotasi `equal`/`percentage`/`priority` + sticky visitor.
-- [ ] Rules engine geo/IP(CIDR)/device/browser.
-- [ ] Deteksi crawler preview → halaman OG.
-- [ ] Bot scoring + rate limit.
-- [ ] Mode direct 302 vs interstitial (delay + tags) + header referrer.
-- [ ] Logging klik via `waitUntil`.
-- [ ] Unit test: rotasi (distribusi), merge query, CIDR match, UA classification, rules order.
+### Fase 2 — Redirect engine (L) ✅
+- [x] `src/params/slug.ts` — matcher param (SLUG_PATTERN + RESERVED_SLUGS).
+- [x] `src/routes/[slug=slug]/+server.ts` — `trailingSlash: 'ignore'`, GET + HEAD.
+- [x] Fast-path di `hooks.server.ts` — skip `getSession()` dan `ServiceHelper` untuk slug path.
+- [x] `redirect/resolver.ts` — resolve Redis→DB, date revive, `claimClick` (atomic cap), `resolveGlobalTags`.
+- [x] `redirect/policy.ts` — `buildDestinationUrl` (query merge), `classifyVisitor` (UA/device/browser/inapp/bot), `normalizeIp`/`matchesIp` (IPv4+IPv6+CIDR mapped), `evaluateRules` (global IP → campaign IP → geo → device → browser), `eligibleDestinations` (schedule+cap), `selectDestination` (equal/percentage/priority + sticky).
+- [x] `redirect/identity.ts` — `hashVisitor` (HMAC), `signSticky`/`readSticky` (tamper-proof cookie), `getVisitorAddress`, `getVisitorCountry` (hanya saat `trustVercelGeo=true`).
+- [x] `redirect/environment.ts` — `parseRedirectEnvironment` (Zod, IP_HASH_SECRET, Upstash pair, rateLimit, trustVercelGeo).
+- [x] `redirect/pages.ts` — `renderPreview` (OG preview, honest), `renderInterstitial` (countdown accessible, tag-consent opt-in, nonce CSP, no-JS fallback, 16 KB dest URL).
+- [x] `redirect/logger.ts` — `logClick` via `waitUntil`, `extractReferrerHost`.
+- [x] `redirect/engine.ts` — orkestrasi penuh: preview → rate limit → rules → bot → rotasi → cap → cookies → direct 302 / interstitial, GPC/DNT dihormati.
+- [x] 325 unit test lolos (`vitest --run --project server`). Browser test opt-in (`RUN_REDIRECT_BROWSER_TESTS=1`) menunggu `playwright install chromium`.
 
 ### Fase 3 — Campaign management UI (M)
 - [ ] `/app/links` tabel + search + filter + pagination server-side.
