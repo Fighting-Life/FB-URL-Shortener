@@ -22,9 +22,9 @@
 <header class="sticky top-0 z-50 border-b border-border bg-sidebar backdrop-blur-md">
 	<div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
 		<a href="/" class="flex items-center gap-2">
-			<img src="/logo.png" alt="LinkShift" class="h-6 w-6 object-cover" />
+			<img src="/logo.png" alt="Bitfy" class="h-6 w-6 object-cover" />
 			<span class="font-display text-xl font-semibold tracking-tight text-ink dark:text-paper">
-				LinkShift
+				Bitfy
 			</span>
 		</a>
 

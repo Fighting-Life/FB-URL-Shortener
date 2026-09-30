@@ -8,6 +8,20 @@
       "when": 1790712470747,
       "tag": "0000_open_speed",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790722821828,
+      "tag": "0001_mushy_energizer",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790725657672,
+      "tag": "0002_campaigns",
+      "breakpoints": true
     }
   ]
 }

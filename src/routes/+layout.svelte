@@ -1,56 +1,26 @@
 <script lang="ts">
-	import Header from './Header.svelte';
+	import { page } from '$app/state';
+	import { MetaTags, deepMerge } from 'svelte-meta-tags';
 	import './layout.css';
+	import { QueryClientProvider } from '@tanstack/svelte-query';
+	import { ModeWatcher } from 'mode-watcher';
+	import { ToastContent } from '@/components/extra/toast/index.js';
+	import { SvelteKitTopLoader } from 'sveltekit-top-loader';
+	import { AppGlobalAlertDialog } from '@/components/extra/index.js';
 
-	let { children } = $props();
+	let { data, children } = $props();
+
+	let metaTags = $derived(deepMerge(data.baseMetaTags, page.data.pageMetaTags));
 </script>
 
-<div class="app">
-	<Header />
-	<main>{@render children()}</main>
+<MetaTags {...metaTags} />
+<ModeWatcher />
+<ToastContent />
+<SvelteKitTopLoader color="#1447e6" />
 
-	<footer>
-		<p>
-			visit
-			<a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a>
-			to learn about SvelteKit
-		</p>
-	</footer>
-</div>
-
-<style>
-	.app {
-		display: flex;
-		flex-direction: column;
-		min-height: 100vh;
-	}
-
-	main {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		padding: 1rem;
-		width: 100%;
-		max-width: 64rem;
-		margin: 0 auto;
-		box-sizing: border-box;
-	}
-
-	footer {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		padding: 12px;
-	}
-
-	footer a {
-		font-weight: bold;
-	}
-
-	@media (min-width: 480px) {
-		footer {
-			padding: 12px 0;
-		}
-	}
-</style>
+<QueryClientProvider client={data.queryClient}>
+	<main class="min-h-screen antialiased">
+		<AppGlobalAlertDialog />
+		{@render children?.()}
+	</main>
+</QueryClientProvider>

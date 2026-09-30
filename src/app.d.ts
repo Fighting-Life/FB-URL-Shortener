@@ -1,7 +1,8 @@
 import type { MiddlewareRouteConfig } from '$lib/middleware/rules';
 import type { AuthSession, AuthType, AuthUser } from '$lib/server/auth';
 import { db } from '$lib/server/db';
-import type { ServiceHelper } from '@/server/helper';
+import type { ServiceHelper } from '$lib/server/helper';
+import type { RedisClient } from '$lib/server/redis';
 import type { RequestEvent } from '@sveltejs/kit';
 
 declare global {
@@ -15,11 +16,10 @@ declare global {
       session?: AuthSession;
       db: typeof db;
       auth?: AuthType;
-      helper?: unknown;
-      setting?: SiteSetting;
-      safeGetSettings?: () => Promise<SiteSetting>;
       helper?: ServiceHelper;
       redis?: RedisClient;
+      setting?: SiteSetting;
+      safeGetSettings?: () => Promise<SiteSetting>;
     }
 
     interface PageData {
@@ -56,4 +56,4 @@ declare global {
 }
 
 export { };
-export { };
+

@@ -21,7 +21,7 @@ const authURL = new URL(authBaseURL);
 const useSecureCookies = NODE_ENV === 'production' && authURL.protocol === 'https:';
 
 export const auth = betterAuth({
-  appName: APP_NAME || 'Link Shift',
+  appName: APP_NAME || 'Bitfy',
   baseURL: authBaseURL,
   secret: BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
@@ -143,7 +143,7 @@ export const auth = betterAuth({
       displayUsernameNormalization: (displayUsername) => displayUsername.toLowerCase()
     }),
     twoFactor({
-      issuer: APP_NAME || 'Link Shift',
+      issuer: APP_NAME || 'Bitfy',
       otpOptions: {
         async sendOTP({ user, otp }) {
           await sendEmail({

@@ -23,6 +23,6 @@
 		/>
 	</svg>
 	<span class="font-display text-[17px] font-semibold tracking-tight text-ink dark:text-paper">
-		LinkShift
+		Bitfy
 	</span>
 </a>

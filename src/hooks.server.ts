@@ -23,6 +23,7 @@ const initializeLocals: Handle = async ({ event, resolve }) => {
   event.locals.db = db;
   event.locals.helper = new ServiceHelper(event);
   event.locals.auth = auth;
+  event.locals.setting = await event.locals.helper.setting.getSettings();
   return resolve(event);
 };
 

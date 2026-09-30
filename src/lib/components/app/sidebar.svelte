@@ -4,15 +4,8 @@
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
 	import { AppNavMain, AppNavUser } from '$lib/components/app/index.js';
 	import { IsMobile } from '$lib/hooks/is-mobile.svelte';
-	import {
-		LayoutDashboard,
-		UserRound,
-		Settings,
-		Link,
-		ScrollText,
-		UsersRound,
-		Globe2
-	} from '@lucide/svelte';
+	import { isAdmin } from '$lib/middleware/rules';
+	import { LayoutDashboard, UserRound, Settings, Link } from '@lucide/svelte';
 
 	let {
 		ref = $bindable(null),
@@ -28,48 +21,29 @@
 	const sidebar = useSidebar();
 	let isMobilePage = new IsMobile();
 
-	const isSuperAdmin = $derived.by(() => user?.role === 'superadmin');
-	const isModerator = $derived.by(() => user?.role === 'moderator' || user?.role === 'superadmin');
+	const isAdminUser = $derived(isAdmin(user?.role));
 
-	const navMain: NavMenu[] = [
-		...[
-			{
-				title: 'Dashboard',
-				url: '/app',
-				icon: LayoutDashboard
-			},
-			{
-				title: 'Links',
-				url: '/app/links',
-				icon: Link
-			},
-			{
-				title: 'Teams',
-				url: '/app/teams',
-				icon: UsersRound
-			},
-			{
-				title: 'Domains',
-				url: '/app/domains',
-				icon: Globe2
-			}
-		],
-		// svelte-ignore state_referenced_locally
-		...(isModerator
+	const navMain: NavMenu[] = $derived([
+		{
+			title: 'Dashboard',
+			url: '/app',
+			icon: LayoutDashboard
+		},
+		{
+			title: 'Links',
+			url: '/app/links',
+			icon: Link
+		},
+		...(isAdminUser
 			? [
 					{
 						title: 'Users',
 						url: '/app/users',
 						icon: UserRound
-					},
-					{
-						title: 'Audit log',
-						url: '/app/audit',
-						icon: ScrollText
 					}
 				]
 			: [])
-	];
+	]);
 	const navSecondary: NavMenu[] = [
 		{
 			title: 'Settings',
@@ -90,21 +64,21 @@
 								{#if isMobilePage.current}
 									<img
 										src={setting?.site_logo || '/logo.png'}
-										alt={setting?.site_name || 'Link Shift'}
+										alt={setting?.site_name || 'Bitfy'}
 										class="h-10 w-10 object-cover"
 									/>
 									<div class="text-left">
 										<p
 											class="text-sm font-semibold tracking-[0.24em] text-muted-foreground uppercase"
 										>
-											{setting?.site_name || 'Link Shift'}
+											{setting?.site_name || 'Bitfy'}
 										</p>
 										<p class="text-xs text-foreground/80">{setting?.site_tagline || ''}</p>
 									</div>
 								{:else}
 									<img
 										src={setting?.site_logo || '/logo.png'}
-										alt={setting?.site_name || 'Link Shift'}
+										alt={setting?.site_name || 'Bitfy'}
 										class="aspect-square size-7 object-cover select-none"
 									/>
 								{/if}
@@ -116,7 +90,7 @@
 		</Sidebar.Header>
 		<Sidebar.Content class="scrollbar-primary overflow-y-auto">
 			<AppNavMain items={navMain} />
-			{#if isSuperAdmin}
+			{#if isAdminUser}
 				<Sidebar.Separator />
 				<AppNavMain items={navSecondary} />
 			{/if}

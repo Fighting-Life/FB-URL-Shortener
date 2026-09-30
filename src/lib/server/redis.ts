@@ -1,6 +1,6 @@
-import { Redis } from '@upstash/redis';
+import { UPSTASH_REDIS_REST_TOKEN, UPSTASH_REDIS_REST_URL } from '$env/static/private';
 import type { RequestEvent } from '@sveltejs/kit';
-import { UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN } from '$env/static/private';
+import { Redis } from '@upstash/redis';
 import { ServerBase } from './server.js';
 
 export class RedisClient extends ServerBase {
@@ -12,14 +12,12 @@ export class RedisClient extends ServerBase {
   }
 
   private initRedis() {
+    if (this.redisClient) return;
 
-    if (!this.redisClient) {
-      this.redisClient = new Redis({
-        url: UPSTASH_REDIS_REST_URL,
-        token: UPSTASH_REDIS_REST_TOKEN
-      });
-      this.event.locals.redis = this;
-    }
+    const url = UPSTASH_REDIS_REST_URL?.trim();
+    const token = UPSTASH_REDIS_REST_TOKEN?.trim();
+    this.redisClient = url && token ? new Redis({ url, token }) : null;
+    this.event.locals.redis = this;
   }
 
   async set(key: string, value: any): Promise<string | null> {

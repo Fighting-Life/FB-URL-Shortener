@@ -28,7 +28,7 @@
 						size="lg"
 						class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 					>
-						<Avatar.Root class="size-8 rounded-lg bg-primary">
+						<Avatar.Root class="size-8 rounded-lg">
 							<Avatar.Image src={user?.image || ''} alt={user?.name} />
 							<Avatar.Fallback class="rounded-lg text-white">
 								{user?.name?.slice(0, 2).toUpperCase() || 'CN'}

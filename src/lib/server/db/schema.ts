@@ -28,6 +28,29 @@ export const rotationStrategyEnum = pgEnum('rotation_strategy', [
   'percentage',
   'priority'
 ]);
+export const forwardQueryModeEnum = pgEnum('forward_query_mode', ['all', 'allowlist', 'none']);
+export const queryConflictEnum = pgEnum('query_conflict', ['destination_wins', 'incoming_wins']);
+export const referrerModeEnum = pgEnum('referrer_mode', ['passthrough', 'no_referrer']);
+export const botActionEnum = pgEnum('bot_action', ['log_only', 'block', 'challenge']);
+export const blockActionEnum = pgEnum('block_action', ['not_found', 'forbidden']);
+export const campaignRuleTypeEnum = pgEnum('campaign_rule_type', ['geo', 'ip', 'device', 'browser']);
+export const campaignRuleModeEnum = pgEnum('campaign_rule_mode', ['allow', 'deny']);
+export const tagProviderEnum = pgEnum('tag_provider', [
+  'gtag',
+  'fb_pixel',
+  'tiktok_pixel',
+  'histats'
+]);
+export const clickDecisionEnum = pgEnum('click_decision', [
+  'redirected',
+  'preview',
+  'blocked_geo',
+  'blocked_ip',
+  'blocked_device',
+  'blocked_browser',
+  'bot',
+  'rate_limited'
+]);
 
 
 export const user = pgTable(
@@ -97,7 +120,7 @@ export const account = pgTable(
   'account',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    issuer: text('issuer').notNull(),
+    issuer: text('issuer').notNull().default(''),
     accountId: text('account_id').notNull(),
     providerId: text('provider_id').notNull(),
     userId: uuid('user_id')
@@ -182,11 +205,179 @@ export const settings = pgTable(
   ]
 );
 
+export const campaign = pgTable(
+  'campaign',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    // Case-sensitive and never reused (soft-deleted rows keep their slug) so an old
+    // Facebook post can't start pointing somewhere else.
+    slug: varchar('slug', { length: 64 }).notNull().unique(),
+    description: text('description').notNull().default(''),
+    status: campaignStatusEnum('status').notNull().default('draft'),
+    rotationStrategy: rotationStrategyEnum('rotation_strategy').notNull().default('equal'),
+    delayMs: integer('delay_ms').notNull().default(0),
+    forwardQuery: forwardQueryModeEnum('forward_query').notNull().default('all'),
+    forwardQueryKeys: text('forward_query_keys').array().notNull().default([]),
+    queryConflict: queryConflictEnum('query_conflict').notNull().default('destination_wins'),
+    referrerMode: referrerModeEnum('referrer_mode').notNull().default('passthrough'),
+    stickyVisitor: boolean('sticky_visitor').notNull().default(false),
+    stickyTtlHours: integer('sticky_ttl_hours').notNull().default(24),
+    botAction: botActionEnum('bot_action').notNull().default('log_only'),
+    blockAction: blockActionEnum('block_action').notNull().default('not_found'),
+    ogTitle: text('og_title'),
+    ogDescription: text('og_description'),
+    ogImage: text('og_image'),
+    expiresAt: timestamp('expires_at'),
+    totalClicks: integer('total_clicks').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at')
+  },
+  (t) => [
+    index('campaign_user_id_idx').on(t.userId),
+    index('campaign_status_idx').on(t.status),
+    index('campaign_created_at_idx').on(t.createdAt),
+    index('campaign_deleted_at_idx').on(t.deletedAt)
+  ]
+);
+
+export const campaignDestination = pgTable(
+  'campaign_destination',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    campaignId: uuid('campaign_id')
+      .notNull()
+      .references(() => campaign.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    label: text('label').notNull().default(''),
+    // Percentage share (0-100) when the campaign uses the `percentage` strategy.
+    weight: integer('weight').notNull().default(100),
+    // Lower number = tried first when the campaign uses the `priority` strategy.
+    priority: integer('priority').notNull().default(1),
+    isActive: boolean('is_active').notNull().default(true),
+    clickCap: integer('click_cap'),
+    clickCount: integer('click_count').notNull().default(0),
+    startsAt: timestamp('starts_at'),
+    endsAt: timestamp('ends_at'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (t) => [index('campaign_destination_campaign_id_idx').on(t.campaignId)]
+);
+
+export const campaignRule = pgTable(
+  'campaign_rule',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    campaignId: uuid('campaign_id')
+      .notNull()
+      .references(() => campaign.id, { onDelete: 'cascade' }),
+    type: campaignRuleTypeEnum('type').notNull(),
+    mode: campaignRuleModeEnum('mode').notNull().default('deny'),
+    values: jsonb('values').$type<string[]>().notNull().default([]),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (t) => [uniqueIndex('campaign_rule_campaign_type_uidx').on(t.campaignId, t.type)]
+);
+
+export const campaignTag = pgTable(
+  'campaign_tag',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    // NULL = platform-wide tag managed by admins.
+    campaignId: uuid('campaign_id').references(() => campaign.id, { onDelete: 'cascade' }),
+    provider: tagProviderEnum('provider').notNull(),
+    tagId: text('tag_id').notNull(),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (t) => [index('campaign_tag_campaign_id_idx').on(t.campaignId)]
+);
+
+export const clickEvent = pgTable(
+  'click_event',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    campaignId: uuid('campaign_id')
+      .notNull()
+      .references(() => campaign.id, { onDelete: 'cascade' }),
+    destinationId: uuid('destination_id').references(() => campaignDestination.id, {
+      onDelete: 'set null'
+    }),
+    decision: clickDecisionEnum('decision').notNull(),
+    country: varchar('country', { length: 2 }),
+    device: text('device'),
+    browser: text('browser'),
+    os: text('os'),
+    isInApp: boolean('is_in_app').notNull().default(false),
+    // HMAC of the visitor IP; the raw IP is never stored.
+    ipHash: text('ip_hash'),
+    referrerHost: text('referrer_host'),
+    hasFbclid: boolean('has_fbclid').notNull().default(false),
+    createdAt: timestamp('created_at').notNull().defaultNow()
+  },
+  (t) => [
+    index('click_event_campaign_created_idx').on(t.campaignId, t.createdAt),
+    index('click_event_created_at_idx').on(t.createdAt)
+  ]
+);
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   twoFactors: many(twoFactor),
+  campaigns: many(campaign)
+}));
+
+export const campaignRelations = relations(campaign, ({ one, many }) => ({
+  owner: one(user, {
+    fields: [campaign.userId],
+    references: [user.id]
+  }),
+  destinations: many(campaignDestination),
+  rules: many(campaignRule),
+  tags: many(campaignTag),
+  clicks: many(clickEvent)
+}));
+
+export const campaignDestinationRelations = relations(campaignDestination, ({ one, many }) => ({
+  campaign: one(campaign, {
+    fields: [campaignDestination.campaignId],
+    references: [campaign.id]
+  }),
+  clicks: many(clickEvent)
+}));
+
+export const campaignRuleRelations = relations(campaignRule, ({ one }) => ({
+  campaign: one(campaign, {
+    fields: [campaignRule.campaignId],
+    references: [campaign.id]
+  })
+}));
+
+export const campaignTagRelations = relations(campaignTag, ({ one }) => ({
+  campaign: one(campaign, {
+    fields: [campaignTag.campaignId],
+    references: [campaign.id]
+  })
+}));
+
+export const clickEventRelations = relations(clickEvent, ({ one }) => ({
+  campaign: one(campaign, {
+    fields: [clickEvent.campaignId],
+    references: [campaign.id]
+  }),
+  destination: one(campaignDestination, {
+    fields: [clickEvent.destinationId],
+    references: [campaignDestination.id]
+  })
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({

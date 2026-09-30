@@ -4,15 +4,15 @@ import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from './schema';
 const DEFAULTS: PlatformSettingsInput = {
-  site_name: 'Link Shift',
+  site_name: 'Bitfy',
   site_tagline: 'Multi-URL cloaking & rotating',
   site_logo: '/logo.png',
   site_favicon: '/favicon.ico',
-  site_meta_title: 'Link Shift',
+  site_meta_title: 'Bitfy',
   site_meta_description:
     'Cloak and rotate links across multiple destinations, block unwanted traffic by IP, domain, or device, and control every redirect — free.',
   site_og_image: '/logo.png',
-  site_og_title: 'LinkShift — Multi-URL cloaking & rotating redirects, free',
+  site_og_title: 'Bitfy — Multi-URL cloaking & rotating redirects, free',
   site_og_description:
     'Cloak and rotate links across multiple destinations, block unwanted traffic by IP, domain, or device, and control every redirect — free.',
   site_url: 'https://links-shift.vercel.app/',

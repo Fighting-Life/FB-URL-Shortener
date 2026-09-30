@@ -33,7 +33,12 @@
 	<div class="mx-auto max-w-6xl px-5 py-14">
 		<div class="grid grid-cols-2 gap-10 md:grid-cols-5">
 			<div class="col-span-2">
-				<Logo />
+			<a href="/" class="flex items-center gap-2">
+				<img src="/logo.png" alt="Bitfy" class="h-6 w-6 object-cover" />
+				<span class="font-display text-xl font-semibold tracking-tight text-ink dark:text-paper">
+					Bitfy
+				</span>
+			</a>
 				<p class="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
 					Route, mask, and control every link you share — free, with rotation and access rules built
 					in.
@@ -62,7 +67,7 @@
 		<div
 			class="mt-12 flex flex-col items-start justify-between gap-4 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center"
 		>
-			<p>© {new Date().getFullYear()} LinkShift. All rights reserved.</p>
+			<p>© {new Date().getFullYear()} Bitfy. All rights reserved.</p>
 			<p class="font-mono">status: all systems routing normally</p>
 		</div>
 	</div>

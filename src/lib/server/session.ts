@@ -1,7 +1,7 @@
 import type { RequestEvent } from '@sveltejs/kit';
-import { ServerBase } from './server.js';
 import { redirect } from '@sveltejs/kit';
 import type { Role } from './auth';
+import { ServerBase } from './server.js';
 
 export class SessionService extends ServerBase {
   constructor(protected readonly event: RequestEvent) {
@@ -17,14 +17,14 @@ export class SessionService extends ServerBase {
   async requireAdmin() {
     const session = await this.requireUser();
     const role = session.user.role as Role | undefined;
-    if (role !== 'superadmin' && role !== 'moderator') {
+    if (role !== 'admin') {
       throw redirect(302, '/');
     }
     return session;
   }
   async requireSuperadmin() {
     const session = await this.requireUser();
-    if ((session.user.role as Role | undefined) !== 'superadmin') {
+    if ((session.user.role as Role | undefined) !== 'admin') {
       throw redirect(302, '/admin');
     }
     return session;

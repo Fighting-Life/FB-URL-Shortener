@@ -1,19 +1,19 @@
+import { PUBLIC_SITE_URL } from '$env/static/public';
+import { settings } from '$lib/server/db/schema';
+import type { PlatformSettingsInput } from '@/utils/validators.js';
 import type { RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { ServerBase } from './server.js';
-import { settings, auditLogs } from '$lib/server/db/schema';
-import type { PlatformSettingsInput } from '@/utils/validators.js';
-import { PUBLIC_SITE_URL } from '$env/static/public';
 
 const DEFAULTS: PlatformSettingsInput = {
-  site_name: 'Link Shift',
+  site_name: 'Bitfy',
   site_tagline: 'Multi-URL cloaking & rotating',
   site_logo: '/logo.png',
   site_favicon: '/favicon.ico',
-  site_meta_title: 'Link Shift',
+  site_meta_title: 'Bitfy',
   site_meta_description: 'Cloak and rotate links across multiple destinations, block unwanted traffic by IP, domain, or device, and control every redirect — free.',
   site_og_image: '/logo.png',
-  site_og_title: 'LinkShift — Multi-URL cloaking & rotating redirects, free',
+  site_og_title: 'Bitfy — Multi-URL cloaking & rotating redirects, free',
   site_og_description: 'Cloak and rotate links across multiple destinations, block unwanted traffic by IP, domain, or device, and control every redirect — free.',
   site_url: PUBLIC_SITE_URL || "http://localhost:5000",
   site_keywords: 'link cloaking, link rotation, link protection, link privacy, link security',
@@ -44,13 +44,7 @@ export class SettingService extends ServerBase {
 
       await Promise.all(updatePromises);
 
-      await this.event.locals.db.insert(auditLogs).values({
-        actorId: this.user?.id,
-        action: 'settings.update',
-        targetType: 'settings',
-        targetId: 'platform',
-        meta: body
-      });
+
     } catch (error) {
       this.handleError(error);
     }

@@ -1,16 +1,24 @@
 /** Slugs that can never be used by campaigns (they collide with app routes). */
 export const RESERVED_SLUGS = new Set([
+  '_app',
+  '2fa',
   'admin',
   'api',
   'about',
+  'app',
+  'blog',
   'contact',
   'dashboard',
   'dmca',
+  'docs',
+  'faq',
   'favicon.ico',
   'forgot-password',
   'go',
+  'health',
   'login',
   'logout',
+  'otp-verification',
   'payout-rates',
   'privacy',
   'register',
@@ -18,7 +26,11 @@ export const RESERVED_SLUGS = new Set([
   'reset-password',
   'robots.txt',
   's',
+  'signin',
+  'signout',
+  'signup',
   'sitemap.xml',
+  'static',
   'terms'
 ]);
 
