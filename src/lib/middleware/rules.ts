@@ -36,7 +36,7 @@ export const restrictedSuperAdminRoutes = ['/app/settings', '/app/users', '/app/
 export const publicApiRoutes = ['/api/auth', '/api/public', '/api/link', '/api/embed'] as const;
 export const adminApiRoutes = ['/api/admin', '/api/setting'] as const;
 export const moderatorApiRoutes = ['/api/moderator'] as const;
-export const userApiRoutes = ['/api/user'] as const;
+export const userApiRoutes = ['/api/user', '/api/campaign'] as const;
 
 export const pageRouteRules = {
   '/app/settings': {
@@ -71,6 +71,9 @@ export const apiRouteRules = {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
   },
   '/api/user': {
+    role: [ROLE_LEVELS.USER, ROLE_LEVELS.ADMIN]
+  },
+  '/api/campaign': {
     role: [ROLE_LEVELS.USER, ROLE_LEVELS.ADMIN]
   }
 } satisfies RouteRules;

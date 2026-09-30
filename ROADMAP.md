@@ -228,10 +228,12 @@ Ukuran: **S** kecil · **M** sedang · **L** besar.
 - [x] `redirect/engine.ts` — orkestrasi penuh: preview → rate limit → rules → bot → rotasi → cap → cookies → direct 302 / interstitial, GPC/DNT dihormati.
 - [x] 325 unit test lolos (`vitest --run --project server`). Browser test opt-in (`RUN_REDIRECT_BROWSER_TESTS=1`) menunggu `playwright install chromium`.
 
-### Fase 3 — Campaign management UI (M)
-- [ ] `/app/links` tabel + search + filter + pagination server-side.
-- [ ] Form create/edit multi-step, dynamic destination list, preview URL final (dengan contoh `fbclid`).
-- [ ] Delete (soft), duplicate, pause/resume, copy, QR code.
+### Fase 3 — Campaign management UI (M) ✅
+- [x] `/app/links` — tabel campaign: search, filter status/strategi/sort, pagination URL-based, badge status berwarna, copy link, QR code, dropdown aksi (pause/resume/archive/duplicate/delete).
+- [x] `/app/links/new` & `/app/links/[id]/edit` — form 4-step (Basic Info → Destinations → Rules → Tags & Settings): slug preview + generate random, weight total realtime untuk percentage, date picker, step validation client-side.
+- [x] Komponen `src/lib/components/app/campaign/`: `status-badge`, `step-indicator`, `campaign-form`, `destination-item`, `rules-editor`, `tags-editor`.
+- [x] API routes `src/routes/api/campaign/`: list, create, detail, update, delete, setStatus, duplicate, QR code PNG.
+- [x] `/api/campaign` ditambahkan ke `apiRouteRules` (user+admin).
 
 ### Fase 4 — Analytics & dashboard (M)
 - [ ] Query agregasi (per hari, negara, device, browser, destinasi, decision).
