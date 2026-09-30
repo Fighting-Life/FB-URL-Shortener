@@ -1,0 +1,1 @@
+ALTER TABLE "campaign" ADD COLUMN "fallback_fbclid_id" boolean DEFAULT false NOT NULL;

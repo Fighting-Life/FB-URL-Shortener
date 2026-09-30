@@ -225,6 +225,7 @@ export const campaign = pgTable(
     queryConflict: queryConflictEnum('query_conflict').notNull().default('destination_wins'),
     referrerMode: referrerModeEnum('referrer_mode').notNull().default('passthrough'),
     stickyVisitor: boolean('sticky_visitor').notNull().default(false),
+    fallbackFbclid: boolean('fallback_fbclid_id').notNull().default(false),
     stickyTtlHours: integer('sticky_ttl_hours').notNull().default(24),
     botAction: botActionEnum('bot_action').notNull().default('log_only'),
     blockAction: blockActionEnum('block_action').notNull().default('not_found'),
@@ -321,6 +322,7 @@ export const clickEvent = pgTable(
     ipHash: text('ip_hash'),
     referrerHost: text('referrer_host'),
     hasFbclid: boolean('has_fbclid').notNull().default(false),
+    fbclidSource: text('fbclid_source').notNull().default('none'),
     createdAt: timestamp('created_at').notNull().defaultNow()
   },
   (t) => [

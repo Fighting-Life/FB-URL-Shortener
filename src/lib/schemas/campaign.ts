@@ -201,6 +201,7 @@ export const campaignFormSchema = z
     queryConflict: z.enum(QUERY_CONFLICTS).default('destination_wins'),
     referrerMode: z.enum(REFERRER_MODES).default('passthrough'),
     stickyVisitor: z.boolean().default(false),
+    fallbackFbclid: z.boolean().default(false),
     stickyTtlHours: z.number().int().min(1).max(720).default(24),
     botAction: z.enum(BOT_ACTIONS).default('log_only'),
     blockAction: z.enum(BLOCK_ACTIONS).default('not_found'),

@@ -1,6 +1,6 @@
 {
-  "id": "32da0a50-10d0-4dcc-8e39-d82d32348f7c",
-  "prevId": "0e9387c7-e8d1-46bf-968f-cf68735da52d",
+  "id": "49431690-2543-4acf-9c4a-3942a5214f38",
+  "prevId": "8b3f2c5c-69e8-48e8-8558-4348aafbc500",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -383,6 +383,13 @@
         },
         "sticky_visitor": {
           "name": "sticky_visitor",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fallback_fbclid_id": {
+          "name": "fallback_fbclid_id",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -957,6 +964,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "fbclid_source": {
+          "name": "fbclid_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'none'"
         },
         "created_at": {
           "name": "created_at",

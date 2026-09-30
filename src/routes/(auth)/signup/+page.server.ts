@@ -45,8 +45,7 @@ export const actions = {
         throw new Error('Auth service is not available');
       }
 
-      let username = form.data.email.split('@')[0];
-      username = username.replace(/[^a-zA-Z0-9_.]/g, '');
+      let username = generateValidUsername(form.data.email);
 
       const resUsername = await locals.auth.api.isUsernameAvailable({
         body: {
@@ -54,7 +53,8 @@ export const actions = {
         }
       });
       if (!resUsername?.available) {
-        username = `${username}_${Math.floor(100 + Math.random() * 900)}`;
+        const suffix = `_${Math.floor(100 + Math.random() * 900)}`;
+        username = `${username.slice(0, 30 - suffix.length)}${suffix}`;
       }
 
       const response = await locals.auth.api.signUpEmail({
@@ -101,3 +101,27 @@ export const actions = {
     }
   }
 } satisfies Actions;
+
+
+function generateValidUsername(email: string): string {
+  let base = email.split('@')[0] ?? 'user';
+
+  // Better Auth's displayUsernameValidator accepts only letters, numbers, _ and -.
+  // Replace unsupported email characters (e.g. the dot in john.doe@gmail.com)
+  // instead of passing an invalid displayUsername to signUpEmail.
+  base = base.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+  if (base.length < 3) {
+    base = `user_${Math.floor(100 + Math.random() * 900)}`;
+  }
+
+  if (base.length > 30) {
+    base = base.slice(0, 30);
+  }
+
+  if (/^[0-9_-]/.test(base)) {
+    base = `u${base}`.slice(0, 30);
+  }
+
+  return base;
+}

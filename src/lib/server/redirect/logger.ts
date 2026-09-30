@@ -31,6 +31,7 @@ export interface ClickPayload {
   ipHash: string | null;
   referrerHost: string | null;
   hasFbclid: boolean;
+  fbclidSource: "fallback" | "native" | "none"
 }
 
 async function writeClick(payload: ClickPayload): Promise<void> {
@@ -49,6 +50,7 @@ async function writeClick(payload: ClickPayload): Promise<void> {
         ipHash: payload.ipHash,
         referrerHost: payload.referrerHost,
         hasFbclid: payload.hasFbclid,
+        fbclidSource: payload.fbclidSource,
       }),
       // Only count real redirections and previews towards totalClicks.
       ...(payload.decision === 'redirected' || payload.decision === 'preview'

@@ -1,0 +1,1 @@
+ALTER TABLE "click_event" ADD COLUMN "fbclid_source" text DEFAULT 'none' NOT NULL;

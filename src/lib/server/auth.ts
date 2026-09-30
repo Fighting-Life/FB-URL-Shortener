@@ -122,13 +122,13 @@ export const auth = betterAuth({
     }),
     username({
       immutableUsername: true,
-      minUsernameLength: 5,
-      maxUsernameLength: 100,
+      minUsernameLength: 3,
+      maxUsernameLength: 30,
       usernameValidator: (username) => {
         if (username === 'admin') {
           return false;
         }
-        return true;
+        return /^[a-zA-Z0-9_-]+$/.test(username);
       },
       displayUsernameValidator: (displayUsername) => {
         return /^[a-zA-Z0-9_-]+$/.test(displayUsername);

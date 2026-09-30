@@ -14,7 +14,7 @@
  */
 import type { RequestEvent } from '@sveltejs/kit';
 import type { Redis } from '@upstash/redis';
-
+import { withFallbackFbclid } from './fallback.js';
 import {
   getVisitorAddress,
   getVisitorCountry,
@@ -33,6 +33,7 @@ import {
 } from './policy.js';
 import type { RedirectConfig } from './resolver.js';
 import { claimClick, resolveConfig, resolveGlobalTags } from './resolver.js';
+
 
 export interface EngineOptions {
   redis?: Redis | null;
@@ -153,6 +154,7 @@ export async function handleRedirect(
       ...visitorMeta(visitor, ip, secret, config.id),
       referrerHost: extractReferrerHost(request, platformHost),
       hasFbclid: event.url.searchParams.has('fbclid'),
+      fbclidSource: event.url.searchParams.has('fbclid') ? 'native' : 'none',
     });
     return rateLimitedResponse();
   }
@@ -175,6 +177,7 @@ export async function handleRedirect(
       ...visitorMeta(visitor, ip, secret, config.id),
       referrerHost: extractReferrerHost(request, platformHost),
       hasFbclid: event.url.searchParams.has('fbclid'),
+      fbclidSource: event.url.searchParams.has('fbclid') ? 'native' : 'none',
     });
     return blockedResponse(config.blockAction);
   }
@@ -189,6 +192,7 @@ export async function handleRedirect(
       ...visitorMeta(visitor, ip, secret, config.id),
       referrerHost: extractReferrerHost(request, platformHost),
       hasFbclid: event.url.searchParams.has('fbclid'),
+      fbclidSource: event.url.searchParams.has('fbclid') ? 'native' : 'none',
     });
     return blockedResponse(config.blockAction);
   }
@@ -279,14 +283,23 @@ async function dispatchRedirect(
 ): Promise<Response> {
   const { opts, ip, country, visitor, secret, now, stickyCookieName, platformHost } = ctx;
 
+  const hadNativeFbclid = event.url.searchParams.has('fbclid');
+  const { params: incomingParams, injected: fallbackInjected } = withFallbackFbclid(
+    event.url.searchParams,
+    {
+      key: 'fbclid',
+      enabled: config.fallbackFbclid && config.forwardQuery !== 'none',
+    }
+  );
+
   // Build the final URL with query forwarding
-  const finalUrl = buildDestinationUrl(destinationUrl, event.url.searchParams, {
+  const finalUrl = buildDestinationUrl(destinationUrl, incomingParams, {
     forwardQuery: config.forwardQuery,
     forwardQueryKeys: config.forwardQueryKeys,
     queryConflict: config.queryConflict,
   });
 
-  const hasFbclid = event.url.searchParams.has('fbclid');
+  const hasFbclid = incomingParams.has('fbclid');
   const referrerHost = extractReferrerHost(event.request, platformHost);
 
   // Merge global tags + campaign-specific tags, deduped by provider+tagId
@@ -295,6 +308,12 @@ async function dispatchRedirect(
 
   const noReferrer = config.referrerMode === 'no_referrer';
   const useInterstitial = config.delayMs > 0 || allTags.some((t) => t.isActive);
+
+  const fbclidSource: 'native' | 'fallback' | 'none' = hadNativeFbclid
+    ? 'native'
+    : fallbackInjected
+      ? 'fallback'
+      : 'none';
 
   // Log the click (non-blocking)
   logClick({
@@ -305,6 +324,7 @@ async function dispatchRedirect(
     ...visitorMeta(visitor, ip, secret, config.id),
     referrerHost,
     hasFbclid,
+    fbclidSource,
   });
 
   // Sticky cookie — set/refresh after successful destination selection

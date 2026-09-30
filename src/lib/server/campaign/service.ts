@@ -137,6 +137,7 @@ export function campaignToForm(row: CampaignDetail): CampaignFormData {
     queryConflict: row.queryConflict,
     referrerMode: row.referrerMode,
     stickyVisitor: row.stickyVisitor,
+    fallbackFbclid: row.fallbackFbclid,
     stickyTtlHours: row.stickyTtlHours,
     botAction: row.botAction === 'challenge' ? 'block' : row.botAction,
     blockAction: row.blockAction,

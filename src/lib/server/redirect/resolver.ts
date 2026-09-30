@@ -62,6 +62,7 @@ export type RedirectConfig = {
   ogDescription: string | null;
   ogImage: string | null;
   expiresAt: Date | null;
+  fallbackFbclid: boolean;
   destinations: RedirectDestination[];
   rules: RedirectRule[];
   tags: RedirectTag[];
@@ -74,6 +75,7 @@ function reviveConfig(raw: unknown): RedirectConfig {
   const c = raw as RedirectConfig;
   return {
     ...c,
+    fallbackFbclid: c.fallbackFbclid === true,
     expiresAt: c.expiresAt ? new Date(c.expiresAt) : null,
     destinations: c.destinations.map((d) => ({
       ...d,
@@ -92,6 +94,7 @@ async function queryDb(slug: string): Promise<RedirectConfig | null> {
       queryConflict: true, referrerMode: true, stickyVisitor: true, stickyTtlHours: true,
       botAction: true, blockAction: true, ogTitle: true, ogDescription: true, ogImage: true,
       expiresAt: true,
+      fallbackFbclid: true,
     },
     with: {
       destinations: {

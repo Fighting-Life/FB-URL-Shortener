@@ -217,7 +217,7 @@
 			<Alert.Title>Fix before continuing</Alert.Title>
 			<Alert.Description>
 				<ul class="list-disc space-y-1 pl-4">
-					{#each stepErrors as err}
+					{#each stepErrors as err, i (i)}
 						<li>{err}</li>
 					{/each}
 				</ul>
@@ -303,7 +303,7 @@
 							{statusLabels[$form.status] ?? $form.status}
 						</Select.Trigger>
 						<Select.Content>
-							{#each CAMPAIGN_STATUSES as s}
+							{#each CAMPAIGN_STATUSES as s, si (si)}
 								<Select.Item value={s}>{statusLabels[s]}</Select.Item>
 							{/each}
 						</Select.Content>
@@ -320,7 +320,7 @@
 							{strategyLabels[$form.rotationStrategy] ?? $form.rotationStrategy}
 						</Select.Trigger>
 						<Select.Content>
-							{#each ROTATION_STRATEGIES as s}
+							{#each ROTATION_STRATEGIES as s, si (si)}
 								<Select.Item value={s}>{strategyLabels[s]}</Select.Item>
 							{/each}
 						</Select.Content>
@@ -466,7 +466,7 @@
 								{forwardQueryLabels[$form.forwardQuery] ?? $form.forwardQuery}
 							</Select.Trigger>
 							<Select.Content>
-								{#each FORWARD_QUERY_MODES as mode}
+								{#each FORWARD_QUERY_MODES as mode, mi (mi)}
 									<Select.Item value={mode}>{forwardQueryLabels[mode]}</Select.Item>
 								{/each}
 							</Select.Content>
@@ -499,13 +499,27 @@
 									: 'Incoming params win'}
 							</Select.Trigger>
 							<Select.Content>
-								{#each QUERY_CONFLICTS as c}
+								{#each QUERY_CONFLICTS as c, ci (ci)}
 									<Select.Item value={c}>
 										{c === 'destination_wins' ? 'Destination params win' : 'Incoming params win'}
 									</Select.Item>
 								{/each}
 							</Select.Content>
 						</Select.Root>
+					</Field.Field>
+
+					<!-- Fallback FBClid -->
+					<Field.Field orientation="horizontal">
+						<Field.Content>
+							<Field.Label>Fallback Fbclid ID</Field.Label>
+							<Field.Description>Use Fallback Fbclid ID Random Token</Field.Description>
+						</Field.Content>
+						<Switch
+							checked={$form.fallbackFbclid}
+							onCheckedChange={(v) => {
+								$form.fallbackFbclid = v;
+							}}
+						/>
 					</Field.Field>
 
 					<!-- Referrer Mode -->
@@ -554,7 +568,7 @@
 								{$form.botAction === 'log_only' ? 'Log only (allow through)' : 'Block bots'}
 							</Select.Trigger>
 							<Select.Content>
-								{#each BOT_ACTIONS as a}
+								{#each BOT_ACTIONS as a, i (i)}
 									<Select.Item value={a}>
 										{a === 'log_only' ? 'Log only (allow through)' : 'Block bots'}
 									</Select.Item>
@@ -571,7 +585,7 @@
 									{$form.blockAction === 'not_found' ? '404 Not Found' : '403 Forbidden'}
 								</Select.Trigger>
 								<Select.Content>
-									{#each BLOCK_ACTIONS as a}
+									{#each BLOCK_ACTIONS as a, i (i)}
 										<Select.Item value={a}>
 											{a === 'not_found' ? '404 Not Found' : '403 Forbidden'}
 										</Select.Item>
