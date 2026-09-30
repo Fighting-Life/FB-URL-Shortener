@@ -80,6 +80,7 @@ function campaignColumns(input: CampaignFormData) {
     queryConflict: input.queryConflict,
     referrerMode: input.referrerMode,
     stickyVisitor: input.stickyVisitor,
+    fallbackFbclid: input.fallbackFbclid,
     stickyTtlHours: input.stickyTtlHours,
     botAction: input.botAction,
     blockAction: input.blockAction,
